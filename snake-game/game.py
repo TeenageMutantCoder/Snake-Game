@@ -1,33 +1,42 @@
 import pygame
-from . import snake
-from . import fruit
+try:
+    from snake import Snake
+    from fruit import Fruit
+except ImportError:
+    from .snake import Snake
+    from .fruit import Fruit
 
 
 class Game():
     def __init__(self, width, height, rows=20, score=0, entities=[],
                  fullscreen=False):
+        pygame.init()
+        pygame.font.init()
         self.width = width
         self.height = height
         self.rows = rows
         self.score = score
-        self.highScore = 0
+        self.high_score = 0
         self.entities = entities
-        self.spacingX = self.width // self.rows
-        self.spacingY = (self.height//10*9) // self.rows
+        self.spacing_x = self.width // self.rows
+        self.spacing_y = (self.height//10*9) // self.rows
         self.game = True
         self.clock = pygame.time.Clock()
         self.fullscreen = fullscreen
-
-        pygame.init()
-        pygame.font.init()
+        self.score_font = pygame.font.Font(None, 50)
+        
+        self.snake = Snake(body=[], rows=self.rows)
+        self.entities.append(self.snake)
+        self.fruit = Fruit(rows=self.rows)
+        self.entities.append(self.fruit)
 
         pygame.display.set_caption("Snake Game")
 
         if self.fullscreen:
             self.width = pygame.display.Info().current_w
             self.height = pygame.display.Info().current_h
-            self.spacingX = self.width // self.rows
-            self.spacingY = (self.height//10*9) // self.rows
+            self.spacing_x = self.width // self.rows
+            self.spacing_y = (self.height//10*9) // self.rows
 
             self.window = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
             # pygame.display.toggle_fullscreen()
@@ -35,87 +44,79 @@ class Game():
 
         else:
             self.window = pygame.display.set_mode((self.width, self.height))
-        # pygame.display.set_icon()
 
 
-        self.scoreSurface = pygame.Surface((self.width,
-                                            self.height // 10))
-        self.gameSurface = pygame.Surface((self.width, self.height//10*9))
+        self.score_surface = pygame.Surface((self.width, self.height // 10))
+        self.game_surface = pygame.Surface((self.width, self.height//10 * 9))
 
-        self.snake = snake.Snake(body=[], rows=self.rows)
-        self.entities.append(self.snake)
-        self.fruit = fruit.Fruit(rows=self.rows)
-        self.entities.append(self.fruit)
+        self.game_loop()
 
-        self.gameLoop()
-
-    def gameLoop(self):
+    def game_loop(self):
         ''' Starts the game loop where everything happens '''
         while self.game:
             pygame.time.delay(50)
             self.clock.tick(10)
             self.snake.move("")
-            self.checkDeath()
+            self.check_death()
             self.draw()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.game = False
                     pygame.quit()
                 if event.type == pygame.KEYDOWN:
-                    self.handleKeys(event.key)
+                    self.handle_keys(event.key)
 
     def draw(self):
         ''' Draws game-related items on the window '''
-        self.drawScore()
-        self.drawGame()
+        self.draw_score()
+        self.draw_game()
         pygame.display.flip()
 
-    def drawScore(self):
+    def draw_score(self):
         ''' Displays game score '''
-        if self.score > self.highScore:
-            self.highScore = self.score
-        self.scoreSurface.fill((0, 0, 0))
-        font = pygame.font.Font(None, 50)
-        text = font.render(f"High Score: {self.highScore}       Score: {self.score}",
+        if self.score > self.high_score:
+            self.high_score = self.score
+        self.score_surface.fill((0, 0, 0))
+        text = self.score_font.render(f"High Score: {self.high_score}       Score: {self.score}",
                            1, (255, 255, 255))
         textRect = text.get_rect()
-        textRect.center = (self.scoreSurface.get_width() // 2,
-                           self.scoreSurface.get_height() // 2)
+        textRect.center = (self.score_surface.get_width() // 2,
+                           self.score_surface.get_height() // 2)
 
-        self.scoreSurface.blit(text, textRect)
-        self.window.blit(self.scoreSurface, (0, 0))
+        self.score_surface.blit(text, textRect)
+        self.window.blit(self.score_surface, (0, 0))
 
-    def drawGame(self):
+    def draw_game(self):
         ''' Displays rest of game '''
-        self.gameSurface.fill((0, 0, 0))
+        self.game_surface.fill((0, 0, 0))
         for num in range(self.rows):
-            pygame.draw.line(self.gameSurface, (255, 255, 255),
-                             (num * self.spacingX, 0),
-                             (num * self.spacingX, self.height))
-            pygame.draw.line(self.gameSurface, (255, 255, 255),
-                             (0, num * self.spacingY),
-                             (self.width, num * self.spacingY))
+            pygame.draw.line(self.game_surface, (255, 255, 255),
+                             (num * self.spacing_x, 0),
+                             (num * self.spacing_x, self.height))
+            pygame.draw.line(self.game_surface, (255, 255, 255),
+                             (0, num * self.spacing_y),
+                             (self.width, num * self.spacing_y))
 
         for entity in self.entities:
-            if isinstance(entity, snake.Snake):
-                for c in entity.body:
-                    pygame.draw.rect(self.gameSurface, (0, 255, 0),
-                                     (c.x * self.spacingX,
-                                      c.y * self.spacingY,
-                                      self.spacingX, self.spacingY))
-                    if self.fruit.isCollide(c):
+            if isinstance(entity, Snake):
+                for cube in entity.body:
+                    pygame.draw.rect(self.game_surface, (0, 255, 0),
+                                     (cube.x * self.spacing_x,
+                                      cube.y * self.spacing_y,
+                                      self.spacing_x, self.spacing_y))
+                    if self.fruit.is_collide(cube):
                         self.snake.extend()
-                        self.fruit.newFruit()
+                        self.fruit.new_fruit()
                         self.score += 1
-            elif isinstance(entity, fruit.Fruit):
-                pygame.draw.rect(self.gameSurface, (255, 0, 0),
-                                 (entity.x * self.spacingX,
-                                  entity.y * self.spacingY,
-                                  self.spacingX, self.spacingY))
+            elif isinstance(entity, Fruit):
+                pygame.draw.rect(self.game_surface, (255, 0, 0),
+                                 (entity.x * self.spacing_x,
+                                  entity.y * self.spacing_y,
+                                  self.spacing_x, self.spacing_y))
 
-        self.window.blit(self.gameSurface, (0, self.scoreSurface.get_height()))
+        self.window.blit(self.game_surface, (0, self.score_surface.get_height()))
 
-    def handleKeys(self, key):
+    def handle_keys(self, key):
         ''' Handles key input. Moves snake using arrow keys or WASD '''
         if key == 273:   # Up arrow key
             self.snake.move("up")
@@ -137,7 +138,7 @@ class Game():
             self.game = False
             pygame.quit()
 
-    def checkDeath(self):
+    def check_death(self):
         ''' Checks whether snake is dead. If so, resets stats. '''
         # Check whether snake head occupies same space as part of snake body
         head = self.snake.head
@@ -150,7 +151,7 @@ class Game():
                 self.score = 0
                 self.entities = []
                 del self.snake
-                self.snake = snake.Snake(body=[], rows=self.rows)
-                self.fruit.newFruit()
+                self.snake = Snake(body=[], rows=self.rows)
+                self.fruit.new_fruit()
                 self.entities.append(self.snake)
                 self.entities.append(self.fruit)

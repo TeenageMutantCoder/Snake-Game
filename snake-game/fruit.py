@@ -6,13 +6,13 @@ class Fruit():
 
     def __init__(self, rows=20):
         self.rows = rows
-        self.newFruit()
+        self.new_fruit()
 
-    def isCollide(self, other):
+    def is_collide(self, other):
         ''' Checks if fruit collides with snake '''
         return True if self.x == other.x and self.y == other.y else False
 
-    def newFruit(self):
+    def new_fruit(self):
         ''' Creates a fruit at a new location '''
         self.x = randint(0, self.rows-1)
         self.y = randint(0, self.rows-1)

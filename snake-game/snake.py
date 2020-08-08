@@ -26,7 +26,7 @@ class Snake():
                                                         self.head.y - 1):
                     self.head.dy = -1
                     self.head.dx = 0
-                    self.addTurn()
+                    self.add_turn()
             else:
                 self.head.dy = -1
                 self.head.dx = 0
@@ -37,7 +37,7 @@ class Snake():
                                                         self.head.y + 1):
                     self.head.dy = 1
                     self.head.dx = 0
-                    self.addTurn()
+                    self.add_turn()
             else:
                 self.head.dy = 1
                 self.head.dx = 0
@@ -48,7 +48,7 @@ class Snake():
                                                         self.head.y):
                     self.head.dx = -1
                     self.head.dy = 0
-                    self.addTurn()
+                    self.add_turn()
             else:
                 self.head.dx = -1
                 self.head.dy = 0
@@ -59,7 +59,7 @@ class Snake():
                                                         self.head.y):
                     self.head.dx = 1
                     self.head.dy = 0
-                    self.addTurn()
+                    self.add_turn()
             else:
                 self.head.dx = 1
                 self.head.dy = 0
@@ -68,9 +68,9 @@ class Snake():
             for cube in self.body:
                 cube.move()
 
-        self.moveTail()
+        self.move_tail()
 
-    def moveTail(self):
+    def move_tail(self):
         for index, cube in enumerate(self.body):
             pos = (cube.x, cube.y)
             if pos in self.turns:
@@ -80,6 +80,6 @@ class Snake():
                 if index == len(self.body) - 1:
                     self.turns.pop(pos)
 
-    def addTurn(self):
+    def add_turn(self):
         ''' Records change in direction at a x, y position '''
         self.turns[(self.head.x, self.head.y)] = [self.head.dx, self.head.dy]

@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-from Libraries.game import Game
+try:
+    from game import Game
+except ImportError:
+    from .game import Game
 
 
 if __name__ == "__main__":
