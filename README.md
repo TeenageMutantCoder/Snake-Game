@@ -3,6 +3,10 @@ I created the classic game of snake using pygame
 
 This is my recreation of the game Snake using pygame for GUI.
 
+## Controls
+Arrow keys or WASD for movement of snake
+Esc or X key for program exit.
+
 ## How To Use
 ### From Installer Executable
 Coming soon
