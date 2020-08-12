@@ -1,4 +1,5 @@
 import pygame
+import os
 try:
     from snake import Snake
     from fruit import Fruit
@@ -8,22 +9,21 @@ except ImportError:
 
 
 class Game():
-    def __init__(self, width, height, rows=20, score=0, entities=[],
-                 fullscreen=False):
+    def __init__(self, width, height, rows=20):
         pygame.init()
         pygame.font.init()
         self.width = width
         self.height = height
         self.rows = rows
-        self.score = score
-        self.high_score = 0
-        self.entities = entities
+        self.score = 0
+        self.entities = []
         self.spacing_x = self.width // self.rows
         self.spacing_y = (self.height//10*9) // self.rows
         self.game = True
         self.clock = pygame.time.Clock()
-        self.fullscreen = fullscreen
         self.score_font = pygame.font.Font(None, 50)
+        with open(os.path.join("snake-game", "high_score.txt"), "r") as file:
+            self.high_score = int(file.read())
         
         self.snake = Snake(body=[], rows=self.rows)
         self.entities.append(self.snake)
@@ -32,20 +32,7 @@ class Game():
 
         pygame.display.set_caption("Snake Game")
 
-        if self.fullscreen:
-            self.width = pygame.display.Info().current_w
-            self.height = pygame.display.Info().current_h
-            self.spacing_x = self.width // self.rows
-            self.spacing_y = (self.height//10*9) // self.rows
-
-            self.window = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
-            # pygame.display.toggle_fullscreen()
-            # self.width, self.height = self.window.get_size()
-
-        else:
-            self.window = pygame.display.set_mode((self.width, self.height))
-
-
+        self.window = pygame.display.set_mode((self.width, self.height))
         self.score_surface = pygame.Surface((self.width, self.height // 10))
         self.game_surface = pygame.Surface((self.width, self.height//10 * 9))
 
@@ -76,6 +63,8 @@ class Game():
         ''' Displays game score '''
         if self.score > self.high_score:
             self.high_score = self.score
+            with open(os.path.join("snake-game", "high_score.txt"), "w") as file:
+                file.write(str(self.high_score))
         self.score_surface.fill((0, 0, 0))
         text = self.score_font.render(f"High Score: {self.high_score}       Score: {self.score}",
                            1, (255, 255, 255))
@@ -89,13 +78,10 @@ class Game():
     def draw_game(self):
         ''' Displays rest of game '''
         self.game_surface.fill((0, 0, 0))
-        for num in range(self.rows):
-            pygame.draw.line(self.game_surface, (255, 255, 255),
-                             (num * self.spacing_x, 0),
-                             (num * self.spacing_x, self.height))
-            pygame.draw.line(self.game_surface, (255, 255, 255),
-                             (0, num * self.spacing_y),
-                             (self.width, num * self.spacing_y))
+        for count_x in range(self.rows):
+            for count_y in range(self.rows):
+                rect = pygame.Rect((count_x * self.spacing_x, count_y * self.spacing_y), (self.spacing_x, self.spacing_y))
+                pygame.draw.rect(self.game_surface, (255, 255, 255), rect, 1)
 
         for entity in self.entities:
             if isinstance(entity, Snake):
@@ -103,7 +89,7 @@ class Game():
                     pygame.draw.rect(self.game_surface, (0, 255, 0),
                                      (cube.x * self.spacing_x,
                                       cube.y * self.spacing_y,
-                                      self.spacing_x, self.spacing_y))
+                                      self.spacing_x - 1, self.spacing_y - 1))
                     if self.fruit.is_collide(cube):
                         self.snake.extend()
                         self.fruit.new_fruit()
@@ -112,29 +98,29 @@ class Game():
                 pygame.draw.rect(self.game_surface, (255, 0, 0),
                                  (entity.x * self.spacing_x,
                                   entity.y * self.spacing_y,
-                                  self.spacing_x, self.spacing_y))
+                                  self.spacing_x - 1, self.spacing_y - 1))
 
         self.window.blit(self.game_surface, (0, self.score_surface.get_height()))
 
     def handle_keys(self, key):
         ''' Handles key input. Moves snake using arrow keys or WASD '''
-        if key == 273:   # Up arrow key
+        if key == pygame.K_UP:   # Up arrow key
             self.snake.move("up")
-        elif key == 274:  # Down arrow key
+        elif key == pygame.K_DOWN:  # Down arrow key
             self.snake.move("down")
-        elif key == 275:  # Right arrow key
+        elif key == pygame.K_RIGHT:  # Right arrow key
             self.snake.move("right")
-        elif key == 276:  # Left arrow key
+        elif key == pygame.K_LEFT:  # Left arrow key
             self.snake.move("left")
-        elif key == 119:  # W key
+        elif key == pygame.K_w:  # W key
             self.snake.move("up")
-        elif key == 97:   # A key
+        elif key == pygame.K_a:   # A key
             self.snake.move("left")
-        elif key == 115:  # S key
+        elif key == pygame.K_s:  # S key
             self.snake.move("down")
-        elif key == 100:  # D key
+        elif key == pygame.K_d:  # D key
             self.snake.move("right")
-        elif key == 120:  # X key
+        elif key == pygame.K_x or key == pygame.K_ESCAPE:  # X key or Esc
             self.game = False
             pygame.quit()
 
